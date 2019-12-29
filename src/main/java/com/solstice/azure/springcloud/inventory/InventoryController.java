@@ -14,9 +14,11 @@ import java.util.List;
 public class InventoryController {
 
     private InventoryRepository repository;
+    private InventoryConfiguration inventoryConfiguration;
 
-    public InventoryController(InventoryRepository repository) {
+    public InventoryController(InventoryRepository repository, InventoryConfiguration inventoryConfiguration) {
         this.repository = repository;
+        this.inventoryConfiguration = inventoryConfiguration;
     }
 
     @GetMapping("/inventory")
@@ -28,11 +30,22 @@ public class InventoryController {
         return new ResponseEntity<>(inventories, HttpStatus.OK);
     }
 
+    @GetMapping("/configuration")
+    public ResponseEntity<String> getConfiguration(){
+        String type = "";
+        if(inventoryConfiguration != null) {
+            type = inventoryConfiguration.getType();
+            System.out.println("Zipkin Type from Config: " +type);
+        } else {
+            System.out.println("Did not read from Config Server");
+        }
+        return new ResponseEntity<>(type, HttpStatus.OK);
+    }
+
     @PostMapping("/inventory")
-    public ResponseEntity<String> updateInventory(@RequestBody Inventory inventory) {
+    public ResponseEntity<String> updateInventory(@RequestBody List<Inventory> inventory) {
         System.out.println("Input: "+inventory.toString());
-        Inventory result = repository.save(inventory);
-        System.out.println("Result: "+ result);
+        inventory.forEach(i -> repository.save(i));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
