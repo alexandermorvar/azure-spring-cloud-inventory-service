@@ -5,8 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "spring.zipkin.sender")
+@ConfigurationProperties(prefix = "feature-flag")
 @Data
-public class InventoryConfiguration {
-    private String type;
+public class FeatureFlag {
+    private boolean saveInventory;
 }
+

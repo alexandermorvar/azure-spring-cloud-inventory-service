@@ -7,45 +7,32 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class InventoryController {
 
-    private InventoryRepository repository;
-    private InventoryConfiguration inventoryConfiguration;
+    private InventoryRepository inventoryRepository;
+    private FeatureFlag featureFlag;
 
-    public InventoryController(InventoryRepository repository, InventoryConfiguration inventoryConfiguration) {
-        this.repository = repository;
-        this.inventoryConfiguration = inventoryConfiguration;
-    }
-
-    @GetMapping("/inventory")
-    public ResponseEntity<List<Inventory>> getInventory() {
-        System.out.println("Retrieving inventory");
-        List<Inventory> inventories = new ArrayList<>();
-        repository.findAll().forEach(inventory -> inventories.add(inventory));
-        System.out.println("Inventory retrieved: "+ inventories);
-        return new ResponseEntity<>(inventories, HttpStatus.OK);
-    }
-
-    @GetMapping("/configuration")
-    public ResponseEntity<String> getConfiguration(){
-        String type = "";
-        if(inventoryConfiguration != null) {
-            type = inventoryConfiguration.getType();
-            System.out.println("Zipkin Type from Config: " +type);
-        } else {
-            System.out.println("Did not read from Config Server");
-        }
-        return new ResponseEntity<>(type, HttpStatus.OK);
+    public InventoryController(InventoryRepository repository, FeatureFlag featureFlag) {
+        this.inventoryRepository = repository;
+        this.featureFlag = featureFlag;
     }
 
     @PostMapping("/inventory")
     public ResponseEntity<String> updateInventory(@RequestBody List<Inventory> inventory) {
-        System.out.println("Input: "+inventory.toString());
-        inventory.forEach(i -> repository.save(i));
-        return new ResponseEntity<>(HttpStatus.OK);
+        if(featureFlag.isSaveInventory()) {
+            inventoryRepository.saveAll(inventory);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        }
+        return new ResponseEntity<>("Successfully updated inventory", HttpStatus.OK);
+    }
+
+    @GetMapping("/inventory")
+    public ResponseEntity<List<Inventory>> getAllInventories() {
+        List<Inventory> inventories = (List<Inventory>) inventoryRepository.findAll();
+        return new ResponseEntity<>(inventories, HttpStatus.OK);
     }
 }
