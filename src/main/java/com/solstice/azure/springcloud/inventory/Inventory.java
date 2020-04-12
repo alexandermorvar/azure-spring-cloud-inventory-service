@@ -8,7 +8,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class Inventory {
     private String id;
-    @PartitionKey
     private String productCategory;
     private String productName;
     private Integer quantity;
